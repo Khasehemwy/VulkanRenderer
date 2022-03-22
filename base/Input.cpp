@@ -7,10 +7,10 @@
 */
 
 #include "Input.h"
-Camera* Input_g_camera;
+static Camera* Input_g_camera;
 float Input_g_lastX, Input_g_lastY;
 float Input_g_pitch, Input_g_yaw;
-float* Input_g_fov;
+static float* Input_g_fov;
 
 void Input_mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {

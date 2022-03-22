@@ -7,7 +7,7 @@
 */
 
 #pragma once
-#include"VulkanBase.h"
+#include "VulkanBase.h"
 
 class Input
 {
@@ -16,6 +16,7 @@ private:
 	Camera* camera;
 public:
 	Input(Window* window, Camera* camera);
+	virtual ~Input() = default;
 	void EnableCursor();
 	void EnableScroll(float* fov);
 	void ProcessInput();

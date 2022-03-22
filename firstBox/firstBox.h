@@ -10,26 +10,15 @@
 
 #include "VulkanBase.h"
 
-class firstBox {
+class firstBox: public VulkanBase {
 public:
     void run();
 
 private:
-    struct QueueFamilyIndices {
-        std::optional<uint32_t> graphicsFamily;
-        std::optional<uint32_t> presentFamily;
-        bool isComplete();
-    };
-    struct SwapChainSupportDetails {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
-    };
-
 
     const int MAX_FRAMES_IN_FLIGHT = 2;
 
-    const std::vector<const char*> validationLayers = {
+    std::vector<const char*> validationLayers = {
         "VK_LAYER_KHRONOS_validation"
     };
 #ifdef NDEBUG
@@ -38,22 +27,6 @@ private:
     const bool enableValidationLayers = true;
 #endif
 
-    const std::vector<const char*> deviceExtensions = {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
-    };
-
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData);
-
-
-    Window* window;
-
-    VkInstance instance;
-    VkDebugUtilsMessengerEXT debugMessenger;
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
     VkQueue graphicsQueue;
 
@@ -63,17 +36,7 @@ private:
     void mainLoop();
     void cleanup();
 
-    void createInstance();
-    bool checkValidationLayerSupport();
-    void setupDebugMessenger();
-    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-    std::vector<const char*> getRequiredExtensions();
-
-    void pickPhysicalDevice();
-    bool isDeviceSuitable(VkPhysicalDevice device);
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-    bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+    virtual bool isDeviceSuitable(VkPhysicalDevice device);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
         const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(
@@ -82,9 +45,7 @@ private:
 
     void createLogicalDevice();
 
-    VkSurfaceKHR surface;
     VkQueue presentQueue;
-    void createSurface();
 
     VkSwapchainKHR swapChain;
     std::vector<VkImage> swapChainImages;
@@ -166,7 +127,4 @@ private:
 
     uint32_t currentFrame = 0;
     void drawFrame();
-
-    Camera* camera;
-    Input* inputs;
 };

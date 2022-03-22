@@ -16,7 +16,8 @@ void framebufferResizeCallback(GLFWwindow* window, int width, int height)
 
 Window::Window(float width, float height, const char* title, GLFWmonitor* monitor, GLFWwindow* share)
     :width(width),
-    height(height)
+    height(height),
+    title(title)
 {
     glfwInit();
 
@@ -27,6 +28,12 @@ Window::Window(float width, float height, const char* title, GLFWmonitor* monito
 
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+}
+
+Window::~Window()
+{
+    glfwDestroyWindow(window);
+    glfwTerminate();
 }
 
 GLFWwindow* Window::get()
@@ -42,6 +49,17 @@ void Window::windowResize(bool flag)
 bool Window::windowResize()
 {
     return isWindowResize;
+}
+
+std::string Window::getTitle()
+{
+    return title;
+}
+
+void Window::setTitle(const std::string title)
+{
+    this->title = title;
+    glfwSetWindowTitle(window, title.c_str());
 }
 
 float Window::getWidth()
