@@ -63,8 +63,14 @@ public:
 	virtual ~VulkanBase();
 
 	virtual void setName(const std::string name);
+	virtual void createInstance();
 	virtual void initVulkan();
 	virtual bool isDeviceSuitable(const VkPhysicalDevice& device);
+	virtual VkPhysicalDeviceFeatures createDeviceFeatures();
+	virtual VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	virtual VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+	virtual VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+	virtual VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
 protected:
 	Window* window;
@@ -77,13 +83,26 @@ protected:
 	VkSurfaceKHR surface;
 	VkDebugUtilsMessengerEXT debugMessenger;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+	VkDevice device;
+
+	VkQueue graphicsQueue;
+	VkQueue presentQueue;
+
+	VkSwapchainKHR swapChain;
+	std::vector<VkImage> swapChainImages;
+	std::vector<VkImageView> swapChainImageViews;
+	VkFormat swapChainImageFormat;
+	VkExtent2D swapChainExtent;
 
 	std::vector<const char*> validationLayers = {
 		"VK_LAYER_KHRONOS_validation"
 	};
+	std::vector<const char*>* pValidationLayers = &validationLayers;
+
 	const std::vector<const char*> deviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
+	const std::vector<const char*>* pDeviceExtensions = &deviceExtensions;
 
 	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 	void destroyDebugUtilsMessengerEXT(
@@ -94,10 +113,13 @@ protected:
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+
+	virtual void createSwapChain();
+	void createImageViews();//todo: should be private.
 private:
-	void createInstance();
 	void createSurface();
 	void pickPhysicalDevice();
+	void createLogicalDevice();
 
 	void setupDebugMessenger();
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(

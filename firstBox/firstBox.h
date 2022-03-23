@@ -18,17 +18,11 @@ private:
 
     const int MAX_FRAMES_IN_FLIGHT = 2;
 
-    std::vector<const char*> validationLayers = {
-        "VK_LAYER_KHRONOS_validation"
-    };
 #ifdef NDEBUG
     const bool enableValidationLayers = false;
 #else
     const bool enableValidationLayers = true;
 #endif
-
-    VkDevice device;
-    VkQueue graphicsQueue;
 
     glm::mat4 model, view, proj;
 
@@ -37,27 +31,14 @@ private:
     void cleanup();
 
     virtual bool isDeviceSuitable(VkPhysicalDevice device);
-    VkSurfaceFormatKHR chooseSwapSurfaceFormat(
+    virtual VkSurfaceFormatKHR chooseSwapSurfaceFormat(
         const std::vector<VkSurfaceFormatKHR>& availableFormats);
-    VkPresentModeKHR chooseSwapPresentMode(
+    virtual VkPresentModeKHR chooseSwapPresentMode(
         const std::vector<VkPresentModeKHR>& availablePresentModes);
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+    virtual VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
-    void createLogicalDevice();
-
-    VkQueue presentQueue;
-
-    VkSwapchainKHR swapChain;
-    std::vector<VkImage> swapChainImages;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
-    void createSwapChain();
     void recreateSwapChain();
     void cleanupSwapChain();
-
-    std::vector<VkImageView> swapChainImageViews;
-    void createImageViews();
-    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
