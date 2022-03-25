@@ -16,5 +16,6 @@ All required libraries are contain in the project.
 ## Examples
 
 All generated examples are under `./x64/Debug/*.exe` .  
-Whether `*.exe` can run depends on the platform you use.
+Whether `*.exe` can successfully run depends on the platform you use.  
+
 
