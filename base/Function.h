@@ -10,19 +10,10 @@
 
 #include "VulkanBase.h"
 
-std::vector<char> readFile(const std::string& filename);
-
 uint32_t findMemoryType(
 	VkPhysicalDevice& physicalDevice,
 	uint32_t typeFilter,
 	VkMemoryPropertyFlags properties
-);
-
-VkFormat findSupportedFormat(
-	const std::vector<VkFormat>& candidates,
-	VkImageTiling tiling,
-	VkFormatFeatureFlags features, 
-	VkPhysicalDevice physicalDevice
 );
 
 void createImage(
@@ -37,5 +28,3 @@ void createImage(
 	VkDevice& device,
 	VkPhysicalDevice& physicalDevice
 );
-
-const std::string getAssetPath();

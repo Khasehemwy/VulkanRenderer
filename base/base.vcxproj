@@ -150,6 +150,7 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Types.h" />
+    <ClInclude Include="VulkanTools.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +161,7 @@
     <ClCompile Include="stb_image.cpp" />
     <ClCompile Include="Types.cpp" />
     <ClCompile Include="VulkanBase.cpp" />
+    <ClCompile Include="VulkanTools.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -32,12 +32,14 @@ struct UniformBufferObject;
 class Window;
 class Camera;
 class Input;
+class VulkanTools;
 
 #include "Types.h"
 #include "Function.h"
 #include "Window.h"
 #include "Camera.h"
 #include "Input.h"
+#include "VulkanTools.h"
 
 class VulkanBase
 {
@@ -63,14 +65,20 @@ public:
 	virtual ~VulkanBase();
 
 	virtual void setName(const std::string name);
+	virtual const std::string getAssetPath() const;
 	virtual void createInstance();
+	virtual void createRenderPass();
+	virtual void createDescriptorSetLayout();
+	virtual void createPipeline() = 0;
 	virtual void initVulkan();
 	virtual bool isDeviceSuitable(const VkPhysicalDevice& device);
 	virtual VkPhysicalDeviceFeatures createDeviceFeatures();
+	virtual VkFormat findDepthFormat();
 	virtual VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	virtual VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	virtual VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	virtual VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+	
 
 protected:
 	Window* window;
@@ -93,6 +101,11 @@ protected:
 	std::vector<VkImageView> swapChainImageViews;
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
+
+	VkRenderPass renderPass;
+
+	VkDescriptorSetLayout descriptorSetLayout;
+
 
 	std::vector<const char*> validationLayers = {
 		"VK_LAYER_KHRONOS_validation"

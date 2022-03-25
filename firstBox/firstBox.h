@@ -42,17 +42,12 @@ private:
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
-    void createDescriptorSetLayout();
     void createDescriptorPool();
     void createDescriptorSets();
 
-    VkRenderPass renderPass;
-    VkDescriptorSetLayout descriptorSetLayout;
+    VkPipeline pipeline;
     VkPipelineLayout pipelineLayout;
-    VkPipeline graphicsPipeline;
-    void createRenderPass();
-    void createGraphicsPipeline();
-    VkShaderModule createShaderModule(const std::vector<char>& code);
+    virtual void createPipeline();
 
     std::vector<VkFramebuffer> swapChainFramebuffers;
     void createFramebuffers();
@@ -103,7 +98,6 @@ private:
     VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
     void createDepthResources();
-    VkFormat findDepthFormat();
     bool hasStencilComponent(VkFormat format);
 
     uint32_t currentFrame = 0;
