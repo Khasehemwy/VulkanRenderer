@@ -15,7 +15,9 @@
 class Texture
 {
 public:
-	VkDevice* device;
+	virtual ~Texture();
+
+	VkDevice* pDevice;
 	VkImage image;
 	VkDeviceMemory memory;
 	VkImageLayout layout;
@@ -33,6 +35,7 @@ public:
 		int stbFormat, 
 		VkPhysicalDevice& physicalDevice,
 		VkCommandPool& commandPool,
-		VkQueue& queue
+		VkQueue& queue,
+		VkFormat format
 	);
 };

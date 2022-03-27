@@ -270,3 +270,14 @@ void VulkanTools::copyBufferToImage(VkBuffer& buffer, VkImage& image, uint32_t w
 
     endSingleTimeCommands(device, commandPool, commandBuffer, queue);
 }
+
+void VulkanTools::copyBuffer(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize size, VkDevice& device, VkCommandPool& commandPool, VkQueue& queue)
+{
+    VkCommandBuffer commandBuffer = VulkanTools::beginSingleTimeCommands(device, commandPool);
+
+    VkBufferCopy copyRegion{};
+    copyRegion.size = size;
+    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+    VulkanTools::endSingleTimeCommands(device, commandPool, commandBuffer, queue);
+}

@@ -80,4 +80,13 @@ public:
 		VkQueue& queue,
 		VkDevice& device
 	);
+
+	static void copyBuffer(
+		VkBuffer& srcBuffer,
+		VkBuffer& dstBuffer,
+		VkDeviceSize size,
+		VkDevice& device,
+		VkCommandPool& commandPool,
+		VkQueue& queue
+	);
 };
