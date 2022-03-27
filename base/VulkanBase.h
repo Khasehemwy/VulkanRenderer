@@ -79,7 +79,6 @@ public:
 	virtual void createInstance();
 	virtual void createRenderPass();
 	virtual void createDescriptorSetLayout();
-	virtual void createPipeline() = 0;
 	virtual bool isDeviceSuitable(const VkPhysicalDevice& device);
 	virtual VkPhysicalDeviceFeatures createDeviceFeatures();
 	virtual VkFormat findDepthFormat();
@@ -90,6 +89,9 @@ public:
 	virtual void createDepthResources();
 	virtual void createFramebuffers();
 	
+	virtual void createPipeline() = 0;
+	virtual void createUniformBuffers() = 0;
+	virtual void createDescriptorSets() = 0;
 
 protected:
 	Window* window;

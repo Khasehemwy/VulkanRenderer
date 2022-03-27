@@ -53,8 +53,6 @@ private:
     std::vector<VkCommandBuffer> commandBuffers;
     void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-    VkCommandBuffer beginSingleTimeCommands();
-    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -70,15 +68,11 @@ private:
     void createVertexBuffer();
     void createIndexBuffer();
     void createUniformBuffers();
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
     void updateUniformBuffer(uint32_t currentImage);
 
     Texture2D* texture;
-    void createTextureImage();
-    void createTextureImageView();
-    void createTextureSampler();
+    void createTexture();
 
     virtual void createDepthResources();
     bool hasStencilComponent(VkFormat format);
