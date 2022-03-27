@@ -33,6 +33,7 @@ class Window;
 class Camera;
 class Input;
 class VulkanTools;
+class Texture;
 
 #include "Types.h"
 #include "Function.h"
@@ -40,6 +41,7 @@ class VulkanTools;
 #include "Camera.h"
 #include "Input.h"
 #include "VulkanTools.h"
+#include "Texture.h"
 
 class VulkanBase
 {
@@ -48,6 +50,12 @@ public:
 		/** @brief Activates validation layers (and message output) when set to true */
 		bool validation = false;
 	} settings;
+
+	struct {
+		VkImage image;
+		VkDeviceMemory memory;
+		VkImageView view;
+	} depthImage;
 
 	struct QueueFamilyIndices {
 		std::optional<uint32_t> graphicsFamily;
@@ -66,11 +74,12 @@ public:
 
 	virtual void setName(const std::string name);
 	virtual const std::string getAssetPath() const;
+
+	virtual void initVulkan();
 	virtual void createInstance();
 	virtual void createRenderPass();
 	virtual void createDescriptorSetLayout();
 	virtual void createPipeline() = 0;
-	virtual void initVulkan();
 	virtual bool isDeviceSuitable(const VkPhysicalDevice& device);
 	virtual VkPhysicalDeviceFeatures createDeviceFeatures();
 	virtual VkFormat findDepthFormat();
@@ -78,6 +87,8 @@ public:
 	virtual VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	virtual VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	virtual VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+	virtual void createDepthResources();
+	virtual void createFramebuffers();
 	
 
 protected:
@@ -101,8 +112,10 @@ protected:
 	std::vector<VkImageView> swapChainImageViews;
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
+	std::vector<VkFramebuffer> swapChainFramebuffers;
 
 	VkRenderPass renderPass;
+	VkCommandPool commandPool;
 
 	VkDescriptorSetLayout descriptorSetLayout;
 
@@ -129,10 +142,12 @@ protected:
 
 	virtual void createSwapChain();
 	void createImageViews();//todo: should be private.
+
 private:
 	void createSurface();
 	void pickPhysicalDevice();
 	void createLogicalDevice();
+	void createCommandPool();
 
 	void setupDebugMessenger();
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(

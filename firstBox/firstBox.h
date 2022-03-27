@@ -14,6 +14,7 @@ class firstBox: public VulkanBase {
 public:
     void run();
 
+    virtual ~firstBox();
 private:
 
     const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -49,12 +50,7 @@ private:
     VkPipelineLayout pipelineLayout;
     virtual void createPipeline();
 
-    std::vector<VkFramebuffer> swapChainFramebuffers;
-    void createFramebuffers();
-
-    VkCommandPool commandPool;
     std::vector<VkCommandBuffer> commandBuffers;
-    void createCommandPool();
     void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     VkCommandBuffer beginSingleTimeCommands();
@@ -79,25 +75,12 @@ private:
 
     void updateUniformBuffer(uint32_t currentImage);
 
-    VkImage textureImage;
-    VkDeviceMemory textureImageMemory;
-    VkImageView textureImageView;
-    VkSampler textureSampler;
+    Texture2D* texture;
     void createTextureImage();
-    void transitionImageLayout(
-        VkImage image,
-        VkFormat format,
-        VkImageLayout oldLayout,
-        VkImageLayout newLayout
-    );
-    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
     void createTextureImageView();
     void createTextureSampler();
 
-    VkImage depthImage;
-    VkDeviceMemory depthImageMemory;
-    VkImageView depthImageView;
-    void createDepthResources();
+    virtual void createDepthResources();
     bool hasStencilComponent(VkFormat format);
 
     uint32_t currentFrame = 0;

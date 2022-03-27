@@ -146,6 +146,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Function.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="VulkanBase.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="stb_image.h" />
@@ -159,6 +160,7 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="stb_image.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Types.cpp" />
     <ClCompile Include="VulkanBase.cpp" />
     <ClCompile Include="VulkanTools.cpp" />

@@ -10,21 +10,3 @@
 
 #include "VulkanBase.h"
 
-uint32_t findMemoryType(
-	VkPhysicalDevice& physicalDevice,
-	uint32_t typeFilter,
-	VkMemoryPropertyFlags properties
-);
-
-void createImage(
-	uint32_t width, 
-	uint32_t height, 
-	VkFormat format, 
-	VkImageTiling tiling, 
-	VkImageUsageFlags usage, 
-	VkMemoryPropertyFlags properties, 
-	VkImage& image, 
-	VkDeviceMemory& imageMemory,
-	VkDevice& device,
-	VkPhysicalDevice& physicalDevice
-);
