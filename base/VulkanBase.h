@@ -48,7 +48,12 @@ class VulkanBase
 public:
 	struct Settings {
 		/** @brief Activates validation layers (and message output) when set to true */
-		bool validation = false;
+		#ifdef NDEBUG
+			bool validation = false;
+		#else
+			bool validation = true;
+		#endif
+
 	} settings;
 
 	struct {
@@ -76,24 +81,33 @@ public:
 	virtual const std::string getAssetPath() const;
 
 	virtual void initVulkan();
-	virtual void createInstance();
-	virtual void createRenderPass();
-	virtual void createDescriptorSetLayout();
 	virtual bool isDeviceSuitable(const VkPhysicalDevice& device);
 	virtual VkPhysicalDeviceFeatures createDeviceFeatures();
 	virtual VkFormat findDepthFormat();
 	virtual VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	virtual VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	virtual VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+	virtual void createInstance();
+	virtual void createRenderPass();
 	virtual VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	virtual void createDepthResources();
 	virtual void createFramebuffers();
+	virtual void createSyncObjects();
+
+	virtual void render();
+	virtual void drawFrame();
+	virtual void viewChanged();
 	
 	virtual void createPipeline() = 0;
 	virtual void createUniformBuffers() = 0;
+	virtual void createDescriptorPool() = 0;
+	virtual void createDescriptorSetLayout() = 0;
 	virtual void createDescriptorSets() = 0;
+	virtual void createCommandBuffers() = 0;
 
 protected:
+	int MAX_FRAMES_IN_FLIGHT = 2;
+
 	Window* window;
 	Camera* camera;
 	Input* inputs;
@@ -116,10 +130,16 @@ protected:
 	VkExtent2D swapChainExtent;
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
-	VkRenderPass renderPass;
+	VkPipeline pipeline;
+	VkPipelineLayout pipelineLayout;
+	VkRenderPass renderPass = VK_NULL_HANDLE;
 	VkCommandPool commandPool;
 
-	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+
+	std::vector<VkSemaphore> imageAvailableSemaphores;
+	std::vector<VkSemaphore> renderFinishedSemaphores;
+	std::vector<VkFence> inFlightFences;
 
 
 	std::vector<const char*> validationLayers = {
@@ -143,6 +163,9 @@ protected:
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
 	virtual void createSwapChain();
+	void cleanupSwapChain();
+	void recreateSwapChain();
+
 	void createImageViews();//todo: should be private.
 
 private:

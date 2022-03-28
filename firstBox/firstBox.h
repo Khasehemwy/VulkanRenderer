@@ -17,14 +17,6 @@ public:
     virtual ~firstBox();
 private:
 
-    const int MAX_FRAMES_IN_FLIGHT = 2;
-
-#ifdef NDEBUG
-    const bool enableValidationLayers = false;
-#else
-    const bool enableValidationLayers = true;
-#endif
-
     glm::mat4 model, view, proj;
 
     void initVulkan();
@@ -38,26 +30,17 @@ private:
         const std::vector<VkPresentModeKHR>& availablePresentModes);
     virtual VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
-    void recreateSwapChain();
-    void cleanupSwapChain();
-
-    VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
-    void createDescriptorPool();
-    void createDescriptorSets();
+    VkDescriptorSetLayout descriptorSetLayout;
+    void createDescriptorPool() override;
+    void createDescriptorSetLayout() override;
+    void createDescriptorSets() override;
 
-    VkPipeline pipeline;
-    VkPipelineLayout pipelineLayout;
-    virtual void createPipeline();
+    virtual void createPipeline() override;
 
     std::vector<VkCommandBuffer> commandBuffers;
     void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
-    void createSyncObjects();
 
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
@@ -75,7 +58,6 @@ private:
     void createTexture();
 
     virtual void createDepthResources();
-    bool hasStencilComponent(VkFormat format);
 
     uint32_t currentFrame = 0;
     void drawFrame();

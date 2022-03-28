@@ -55,6 +55,7 @@ firstBox::~firstBox()
 void firstBox::initVulkan()
 {
 	VulkanBase::initVulkan();
+
 	createDescriptorSetLayout();
 	createPipeline();
 
@@ -68,7 +69,6 @@ void firstBox::initVulkan()
 	createIndexBuffer();
 
 	createCommandBuffers();
-	createSyncObjects();
 }
 
 void firstBox::mainLoop()
@@ -77,70 +77,25 @@ void firstBox::mainLoop()
 	camera->target = glm::vec3(0.0f, 0.0f, 0.0f);
 	camera->up = glm::vec3(0.0f, 1.0f, 0.0f);
 
-
-	while (!glfwWindowShouldClose(window->get())) {
-		glfwPollEvents();
-
-		inputs->ProcessInput();
-		camera->view = glm::lookAt(camera->pos, camera->pos + camera->front, camera->up);
-
-		model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(10, 10, 10));
-		model = glm::translate(model, glm::vec3(0, 0, -2));
-		view = camera->view;
-		proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 100.0f);
-		drawFrame();
-	}
-	vkDeviceWaitIdle(device);
+	render();
 }
 
 void firstBox::cleanup()
 {
-	if (settings.validation) {
-		destroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-	}
-
-	for (auto framebuffer : swapChainFramebuffers) {
-		vkDestroyFramebuffer(device, framebuffer, nullptr);
-	}
-
-	for (auto imageView : swapChainImageViews) {
-		vkDestroyImageView(device, imageView, nullptr);
-	}
-
-
-	vkDestroySwapchainKHR(device, swapChain, nullptr);
-	vkDestroySurfaceKHR(instance, surface, nullptr);
 	vkDestroyPipeline(device, pipeline, nullptr);
 	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-	vkDestroyRenderPass(device, renderPass, nullptr);
-	vkDestroyCommandPool(device, commandPool, nullptr);
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
-		vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
-		vkDestroyFence(device, inFlightFences[i], nullptr);
-	}
+	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		vkDestroyBuffer(device, uniformBuffers[i], nullptr);
 		vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
 	}
-
-	vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-
 	vkDestroyBuffer(device, indexBuffer, nullptr);
 	vkFreeMemory(device, indexBufferMemory, nullptr);
 	vkDestroyBuffer(device, vertexBuffer, nullptr);
 	vkFreeMemory(device, vertexBufferMemory, nullptr);
 
-	vkDestroyImageView(device, depthImage.view, nullptr);
-	vkDestroyImage(device, depthImage.image, nullptr);
-	vkFreeMemory(device, depthImage.memory, nullptr);
-
 	delete(texture);
-
-	vkDestroyDevice(device, nullptr);
-	vkDestroyInstance(instance, nullptr);
 }
 
 bool firstBox::isDeviceSuitable(VkPhysicalDevice device)
@@ -197,52 +152,6 @@ VkExtent2D firstBox::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabiliti
 	}
 }
 
-void firstBox::recreateSwapChain()
-{
-	int width = 0, height = 0;
-	glfwGetFramebufferSize(window->get(), &width, &height);
-	while (width == 0 || height == 0) {
-		glfwGetFramebufferSize(window->get(), &width, &height);
-		glfwWaitEvents();
-	}
-
-	vkDeviceWaitIdle(device);
-
-	cleanupSwapChain();
-
-	createSwapChain();
-	createImageViews();
-	createRenderPass();
-	createPipeline();
-	createDepthResources();
-	createFramebuffers();
-	createUniformBuffers();
-	createDescriptorPool();
-	createDescriptorSets();
-	createCommandBuffers();
-}
-
-void firstBox::cleanupSwapChain()
-{
-	vkDestroyImageView(device, depthImage.view, nullptr);
-	vkDestroyImage(device, depthImage.image, nullptr);
-	vkFreeMemory(device, depthImage.memory, nullptr);
-
-	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
-		vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
-	}
-
-	vkDestroyPipeline(device, pipeline, nullptr);
-	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-	vkDestroyRenderPass(device, renderPass, nullptr);
-
-	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-		vkDestroyImageView(device, swapChainImageViews[i], nullptr);
-	}
-
-	vkDestroySwapchainKHR(device, swapChain, nullptr);
-}
-
 void firstBox::createDescriptorPool()
 {
 	std::array<VkDescriptorPoolSize, 2> poolSizes{};
@@ -259,6 +168,33 @@ void firstBox::createDescriptorPool()
 
 	if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create descriptor pool!");
+	}
+}
+
+void firstBox::createDescriptorSetLayout()
+{
+	VkDescriptorSetLayoutBinding uboLayoutBinding{};
+	uboLayoutBinding.binding = 0;
+	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uboLayoutBinding.descriptorCount = 1;
+	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
+
+	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+	samplerLayoutBinding.binding = 1;
+	samplerLayoutBinding.descriptorCount = 1;
+	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	samplerLayoutBinding.pImmutableSamplers = nullptr;
+	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+	layoutInfo.pBindings = bindings.data();
+
+	if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create descriptor set layout!");
 	}
 }
 
@@ -529,31 +465,16 @@ void firstBox::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	}
 }
 
-void firstBox::createSyncObjects()
-{
-	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-
-	VkSemaphoreCreateInfo semaphoreInfo{};
-	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-	VkFenceCreateInfo fenceInfo{};
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-			vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
-
-			throw std::runtime_error("failed to create synchronization objects for a frame!");
-		}
-	}
-}
-
 void firstBox::drawFrame()
 {
+	camera->view = glm::lookAt(camera->pos, camera->pos + camera->front, camera->up);
+
+	model = glm::mat4(1.0f);
+	model = glm::scale(model, glm::vec3(10, 10, 10));
+	model = glm::translate(model, glm::vec3(0, 0, -2));
+	view = camera->view;
+	proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 100.0f);
+
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 	uint32_t imageIndex;
@@ -608,8 +529,7 @@ void firstBox::drawFrame()
 	presentInfo.pResults = nullptr; // Optional
 
 	result = vkQueuePresentKHR(presentQueue, &presentInfo);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window->windowResize()) {
-		window->windowResize(false);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		recreateSwapChain();
 	}
 	else if (result != VK_SUCCESS) {
@@ -777,16 +697,4 @@ void firstBox::createDepthResources()
 		graphicsQueue,
 		device
 	);
-}
-
-bool firstBox::hasStencilComponent(VkFormat format)
-{
-	return
-		format == VK_FORMAT_D32_SFLOAT_S8_UINT
-		|| format == VK_FORMAT_D24_UNORM_S8_UINT;
-}
-
-bool firstBox::QueueFamilyIndices::isComplete()
-{
-	return graphicsFamily.has_value() && presentFamily.has_value();
 }

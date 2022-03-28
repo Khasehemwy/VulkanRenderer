@@ -71,9 +71,31 @@ VulkanBase::~VulkanBase()
 	delete(camera);
 	delete(window);
 
-	//if (settings.validation) {
-	//	destroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-	//}
+	if (settings.validation) { destroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr); }
+
+	for (auto framebuffer : swapChainFramebuffers) { vkDestroyFramebuffer(device, framebuffer, nullptr); }
+	for (auto imageView : swapChainImageViews) { vkDestroyImageView(device, imageView, nullptr); }
+
+	vkDestroySwapchainKHR(device, swapChain, nullptr);
+	vkDestroySurfaceKHR(instance, surface, nullptr);
+	vkDestroyCommandPool(device, commandPool, nullptr);
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+		vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
+		vkDestroyFence(device, inFlightFences[i], nullptr);
+	}
+
+	if (descriptorPool != VK_NULL_HANDLE) { vkDestroyDescriptorPool(device, descriptorPool, nullptr); }
+
+	if (renderPass != VK_NULL_HANDLE) { vkDestroyRenderPass(device, renderPass, nullptr); }
+
+	vkDestroyImageView(device, depthImage.view, nullptr);
+	vkDestroyImage(device, depthImage.image, nullptr);
+	vkFreeMemory(device, depthImage.memory, nullptr);
+
+	vkDestroyDevice(device, nullptr);
+	vkDestroyInstance(instance, nullptr);
 }
 
 void VulkanBase::setName(const std::string name)
@@ -99,6 +121,7 @@ void VulkanBase::initVulkan()
 	createCommandPool();
 	createDepthResources();
 	createFramebuffers();
+	createSyncObjects();
 }
 
 bool VulkanBase::isDeviceSuitable(const VkPhysicalDevice& device)
@@ -259,6 +282,52 @@ void VulkanBase::createFramebuffers()
 	}
 }
 
+void VulkanBase::createSyncObjects()
+{
+	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+
+	VkSemaphoreCreateInfo semaphoreInfo{};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkFenceCreateInfo fenceInfo{};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
+			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+			vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
+
+			throw std::runtime_error("failed to create synchronization objects for a frame!");
+		}
+	}
+}
+
+void VulkanBase::render()
+{
+	while (!glfwWindowShouldClose(window->get())) {
+		glfwPollEvents();
+		inputs->ProcessInput();
+		viewChanged();
+		drawFrame();
+	}
+	vkDeviceWaitIdle(device);
+}
+
+void VulkanBase::drawFrame()
+{
+}
+
+void VulkanBase::viewChanged()
+{
+	if (window->windowResize()) {
+		window->windowResize(false);
+		recreateSwapChain();
+	}
+}
+
 void VulkanBase::createInstance()
 {
 	//Enable Validation Layer
@@ -386,33 +455,6 @@ void VulkanBase::createRenderPass()
 
 	if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create render pass!");
-	}
-}
-
-void VulkanBase::createDescriptorSetLayout()
-{
-	VkDescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.binding = 0;
-	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.descriptorCount = 1;
-	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.binding = 1;
-	samplerLayoutBinding.descriptorCount = 1;
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.pImmutableSamplers = nullptr;
-	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-	std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-	layoutInfo.pBindings = bindings.data();
-
-	if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create descriptor set layout!");
 	}
 }
 
@@ -592,6 +634,48 @@ void VulkanBase::createSwapChain()
 	swapChainExtent = extent;
 }
 
+void VulkanBase::cleanupSwapChain()
+{
+	vkDestroyImageView(device, depthImage.view, nullptr);
+	vkDestroyImage(device, depthImage.image, nullptr);
+	vkFreeMemory(device, depthImage.memory, nullptr);
+
+	for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
+		vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
+	}
+
+	vkDestroyPipeline(device, pipeline, nullptr);
+	vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+	vkDestroyRenderPass(device, renderPass, nullptr);
+
+	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+		vkDestroyImageView(device, swapChainImageViews[i], nullptr);
+	}
+
+	vkDestroySwapchainKHR(device, swapChain, nullptr);
+}
+
+void VulkanBase::recreateSwapChain()
+{
+	int width = 0, height = 0;
+	glfwGetFramebufferSize(window->get(), &width, &height);
+	while (width == 0 || height == 0) {
+		glfwGetFramebufferSize(window->get(), &width, &height);
+		glfwWaitEvents();
+	}
+
+	vkDeviceWaitIdle(device);
+
+	cleanupSwapChain();
+
+	createSwapChain();
+	createImageViews();
+	createRenderPass();
+	createPipeline();
+	createDepthResources();
+	createFramebuffers();
+}
+
 void VulkanBase::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
 {
 	createInfo = {};
@@ -643,4 +727,9 @@ void VulkanBase::destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtils
 	if (func != nullptr) {
 		func(instance, debugMessenger, pAllocator);
 	}
+}
+
+bool VulkanBase::QueueFamilyIndices::isComplete()
+{
+	return graphicsFamily.has_value() && presentFamily.has_value();
 }
