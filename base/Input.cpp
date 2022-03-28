@@ -79,4 +79,8 @@ void Input::ProcessInput()
 		camera->Move(3);
 	if (glfwGetKey(window->get(), GLFW_KEY_D) == GLFW_PRESS)
 		camera->Move(4);
+	if (glfwGetKey(window->get(), GLFW_KEY_Q) == GLFW_PRESS)
+		camera->Move(5);
+	if (glfwGetKey(window->get(), GLFW_KEY_E) == GLFW_PRESS)
+		camera->Move(6);
 }

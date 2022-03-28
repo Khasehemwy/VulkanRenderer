@@ -33,17 +33,23 @@ glm::mat4 Camera::Move(unsigned int way)
 {
 	switch (way)
 	{
-	case 1:
+	case 1://W
 		pos += speed * glm::normalize(glm::cross(up, glm::cross(front, up)));
 		break;
-	case 2:
+	case 2://S
 		pos -= speed * glm::normalize(glm::cross(up, glm::cross(front, up)));
 		break;
-	case 3:
+	case 3://A
 		pos -= glm::normalize(glm::cross(front, up)) * speed;
 		break;
-	case 4:
+	case 4://D
 		pos += glm::normalize(glm::cross(front, up)) * speed;
+		break;
+	case 5://Q
+		pos += up * speed;
+		break;
+	case 6://E
+		pos += -up * speed;
 		break;
 	default:
 		break;
