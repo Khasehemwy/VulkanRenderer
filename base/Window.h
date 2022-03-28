@@ -12,14 +12,14 @@
 class Window
 {
 private:
-	float width = 1400, height = 800;
+	float width, height;
 	bool isWindowResize = false;
 	std::string title;
 	GLFWwindow* window;
 
 public:
 
-	Window(float width = 1400, float height = 800, const char* title = "Vulkan", GLFWmonitor* monitor = NULL, GLFWwindow* share = NULL);
+	Window(float width = 1920, float height = 1080, const char* title = "Vulkan", GLFWmonitor* monitor = NULL, GLFWwindow* share = NULL);
 	~Window();
 	void windowResize(bool flag);
 	bool windowResize();
